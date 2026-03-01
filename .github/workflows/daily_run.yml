@@ -1,0 +1,51 @@
+name: Daily Crude Oil Agent
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Runs every day at 01:00 UTC (09:00 Taipei time)
+  workflow_dispatch:      # Also allows manual trigger from GitHub UI
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      # Restore SQLite DB and scraped files from previous run
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data.db
+          key: agent-data-${{ runner.os }}
+          restore-keys: |
+            agent-data-
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          playwright install chromium --with-deps
+
+      - name: Run agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GMAIL_TO: ${{ secrets.GMAIL_TO }}
+        run: python main.py
+
+      # Save updated DB and scraped files for next run
+      - name: Save cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            data.db
+          key: agent-data-${{ runner.os }}
