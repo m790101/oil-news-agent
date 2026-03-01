@@ -13,25 +13,46 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Restore SQLite DB and scraped files from previous run
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            data.db
-          key: agent-data-${{ runner.os }}
-          restore-keys: |
-            agent-data-
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
+      # Cache pip packages — keyed to requirements.txt so it auto-invalidates when deps change
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      # Cache Playwright browser — only re-downloads when playwright version changes
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          playwright install chromium --with-deps
+        run: pip install -r requirements.txt
+
+      # Only install browser if not found in cache
+      - name: Install Playwright browser
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: playwright install chromium --with-deps
+
+      # Restore SQLite DB and scraped files from previous run
+      - name: Restore agent data
+        uses: actions/cache@v4
+        with:
+          path: |
+            data.db
+            scraped/
+          key: agent-data-${{ runner.os }}
+          restore-keys: |
+            agent-data-
 
       - name: Run agent
         env:
@@ -43,9 +64,10 @@ jobs:
         run: python main.py
 
       # Save updated DB and scraped files for next run
-      - name: Save cache
+      - name: Save agent data
         uses: actions/cache@v4
         with:
           path: |
             data.db
+            scraped/
           key: agent-data-${{ runner.os }}
