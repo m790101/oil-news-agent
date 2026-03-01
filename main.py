@@ -1,5 +1,4 @@
 import asyncio
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,7 +11,6 @@ from db import (
     # update_file_path,
 )
 from agents import build_crude_oil_agent
-from scraper import scrape_page
 from emailer import send_crude_oil_report
 
 
