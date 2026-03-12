@@ -60,19 +60,66 @@ def send_email(subject: str, body: str) -> bool:
         return False
 
 
-def send_crude_oil_report(rows: list[dict] = None):
-    """Fetch latest crude oil rows and email a summary."""
-    if rows is None:
-        rows = get_all_crude_oil()
 
-    # Only email today's rows
+def build_soros_summary(rows: list[dict]) -> str:
+    """Format Soros portfolio rows into plain text with instrument type clearly shown."""
+    if not rows:
+        return "No Soros portfolio data found."
+ 
+    # Label map with emoji for quick visual scanning
+    type_labels = {
+        "stock":   "📈 STOCK  ",
+        "etf":     "🗂  ETF    ",
+        "put":     "🔴 PUT    ",
+        "call":    "🟢 CALL   ",
+        "warrant": "📜 WARRANT",
+    }
+ 
+    lines = [
+        "George Soros / Soros Fund Management — Top 10 Holdings (Latest 13F)",
+        "=" * 70,
+        f"{'#':<4} {'Type':<12} {'Ticker':<8} {'Company':<32} {'Value':>8}  {'Wt%':>6}  Change",
+        "-" * 70,
+    ]
+ 
+    for row in rows:
+        itype = (row.get("instrument_type") or "stock").lower()
+        label = type_labels.get(itype, f"  {itype.upper():<8}")
+        lines.append(
+            f"#{row['rank']:<3} {label}  {row['ticker']:<8} {row['company']:<32} "
+            f"{row['value_usd']:>8}  {row['portfolio_pct']:>6}  {row['change_note']}"
+        )
+ 
+    lines.append("-" * 70)
+    lines.append(f"Source: {rows[0].get('source', 'N/A')}")
+    lines.append(f"* 🔴 PUT positions are hedges/bearish bets, not direct ownership")
+    return "\n".join(lines)
+
+
+
+def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] = None):
+    """Send a combined daily report with crude oil news and Soros portfolio."""
+    from db import get_all_crude_oil, get_soros_portfolio
     today = datetime.now().strftime("%Y-%m-%d")
-    todays_rows = [r for r in rows if r["created_at"].startswith(today)]
-
-    if not todays_rows:
-        print("[EMAIL] No new rows today, skipping email.")
+ 
+    # ---- Crude Oil ----
+    if crude_oil_rows is None:
+        all_rows = get_all_crude_oil()
+        crude_oil_rows = [r for r in all_rows if r["created_at"].startswith(today)]
+ 
+    # ---- Soros Portfolio ----
+    if soros_rows is None:
+        soros_rows = get_soros_portfolio()
+ 
+    if not crude_oil_rows and not soros_rows:
+        print("[EMAIL] Nothing to send today.")
         return
-
-    subject = f"Crude Oil News — {today} ({len(todays_rows)} articles)"
-    body = build_crude_oil_summary(todays_rows)
+ 
+    subject = f"Daily Market Report — {today}"
+    body = "\n\n".join(filter(None, [
+        build_crude_oil_summary(crude_oil_rows),
+        build_soros_summary(soros_rows),
+    ]))
+ 
     send_email(subject, body)
+ 

@@ -164,3 +164,73 @@ def get_rows_without_file(table: str) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+# ── Soros Portfolio ─────────────────────────────────────────────────────────
+
+
+def init_soros_table():
+    """Create soros_portfolio table if not exists."""
+    conn = get_connection()
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS soros_portfolio (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rank INTEGER,
+            ticker TEXT,
+            company TEXT,
+            sector TEXT,
+            instrument_type TEXT DEFAULT 'stock',  -- 'stock', 'etf', 'put', 'call', 'warrant'
+            value_usd TEXT,
+            portfolio_pct TEXT,
+            change_note TEXT,
+            source TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+    # Migrate existing DB if column missing
+    try:
+        conn.execute("ALTER TABLE soros_portfolio ADD COLUMN instrument_type TEXT DEFAULT 'stock'")
+    except Exception:
+        pass
+    conn.commit()
+    conn.close()
+
+ 
+ 
+def clear_soros_portfolio():
+    """Clear old portfolio data before inserting fresh snapshot."""
+    conn = get_connection()
+    conn.execute("DELETE FROM soros_portfolio")
+    conn.commit()
+    conn.close()
+    print("[DB] Cleared old Soros portfolio data.")
+ 
+ 
+def insert_soros_holding(
+    rank: int, ticker: str, company: str, sector: str,
+    instrument_type: str, value_usd: str, portfolio_pct: str,
+    change_note: str, source: str
+):
+    conn = get_connection()
+    try:
+        conn.execute(
+            """INSERT INTO soros_portfolio
+               (rank, ticker, company, sector, instrument_type, value_usd, portfolio_pct, change_note, source)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (rank, ticker, company, sector, instrument_type, value_usd, portfolio_pct, change_note, source),
+        )
+        conn.commit()
+        print(f"[DB] Saved Soros holding #{rank}: [{instrument_type.upper()}] {ticker} - {company}")
+    except Exception as e:
+        print(f"[DB] Error inserting Soros holding: {e}")
+    finally:
+        conn.close()
+ 
+ 
+def get_soros_portfolio():
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM soros_portfolio ORDER BY rank ASC"
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
