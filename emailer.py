@@ -191,6 +191,9 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
 
     if html:
         safe_body = body.encode("utf-8").decode("utf-8")  # already utf-8, just sanitize \xa0
+        safe_body = safe_body.replace("\u2019", "'").replace("\u2018", "'")
+        safe_body = safe_body.replace("\u201c", '"').replace("\u201d", '"')
+        safe_body = safe_body.replace("\u2013", "-").replace("\u2014", "-")
         safe_body = safe_body.replace("\xa0", " ").replace("\u200b", "")
     else:
         safe_body = clean(body)
