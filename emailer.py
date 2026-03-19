@@ -53,8 +53,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
-            server.sendmail(gmail_user, to, msg.as_bytes())
-            # server.sendmail(gmail_user, to, msg.as_string())
+            # server.sendmail(gmail_user, to, msg.as_bytes())
+            server.sendmail(gmail_user, to, msg.as_string())
         print(f"[EMAIL] Sent to {to}")
         return True
     except Exception as e:
