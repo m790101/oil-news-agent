@@ -78,9 +78,9 @@ async def main():
 
 
     # 2. Run agents 
-    # await run_crude_oil_agent()
+    await run_crude_oil_agent()
     # await run_soros_agent()
-    await run_daily_news_agent()
+    # await run_daily_news_agent()
 
     # 3. Email today's crude oil results
     print("\n" + "=" * 50)
@@ -88,8 +88,8 @@ async def main():
     print("=" * 50)
 
     # 4. Email today's news digest
-    # send_daily_report()
-    send_daily_news_global()
+    send_daily_report()
+    # send_daily_news_global()
 
 
     print("\n" + "=" * 50)
