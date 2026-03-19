@@ -417,7 +417,7 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
 
 def send_daily_news_global(news_rows: list[dict] = None):
     from db import get_daily_news_by_date
-    today = datetime.now().strftime("%Y-%m-%d").replace("\xa0", " ")
+    today = datetime.now().strftime("%Y-%m-%d")
     if news_rows is None:
         news_rows = get_daily_news_by_date(today)
     if not news_rows:
@@ -428,6 +428,22 @@ def send_daily_news_global(news_rows: list[dict] = None):
         print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
         return
     subject = f"Daily News Digest - {today}"
-    body = build_daily_news_html(news_rows)
-    body = body.replace("\xa0", " ") 
-    send_email(subject, body, to=recipient, html=True)
+    body = build_daily_news_summary(news_rows)
+    send_email(subject, body, to=recipient)
+
+# def send_daily_news_global(news_rows: list[dict] = None):
+#     from db import get_daily_news_by_date
+#     today = datetime.now().strftime("%Y-%m-%d").replace("\xa0", " ")
+#     if news_rows is None:
+#         news_rows = get_daily_news_by_date(today)
+#     if not news_rows:
+#         print("[EMAIL] No news to send to external recipient.")
+#         return
+#     recipient = os.environ.get("GMAIL_EMILY")
+#     if not recipient:
+#         print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
+#         return
+#     subject = f"Daily News Digest - {today}"
+#     body = build_daily_news_html(news_rows)
+#     body = body.replace("\xa0", " ") 
+#     send_email(subject, body, to=recipient, html=True)
