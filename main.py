@@ -88,7 +88,7 @@ async def main():
     print("=" * 50)
 
     # 4. Email today's news digest
-    send_daily_report()
+    # send_daily_report()
     send_daily_news_global()
 
 
