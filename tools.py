@@ -4,8 +4,17 @@ from dotenv import load_dotenv
 from tavily import AsyncTavilyClient
 from llama_index.core.tools import FunctionTool
 from db import insert_crude_oil, insert_taiwan_law
+import re
 
 load_dotenv()
+
+
+def strip_markdown_url(url: str) -> str:
+    """Remove markdown formatting from URLs e.g. __https://...__ -> https://..."""
+    url = url.strip()
+    url = re.sub(r'^_+|_+$', '', url)  # strip leading/trailing underscores
+    url = url.replace('\xa0', '').replace('\u200b', '')  # strip hidden chars
+    return url.strip()
 
 
 # ── Shared search function ──────────────────────────────────────────────────
@@ -30,7 +39,7 @@ def save_crude_oil_news(title: str, summary: str, url: str, source: str) -> str:
         url: full URL of the article
         source: name of the publication or website
     """
-    insert_crude_oil(title=title, summary=summary, url=url, source=source)
+    insert_crude_oil(title=title, summary=summary, url=strip_markdown_url(url), source=source)
     return f"Saved: {title}"
 
 
@@ -107,7 +116,7 @@ def save_soros_holding(
         source: URL or name of the source
     """
     from db import insert_soros_holding
-    insert_soros_holding(rank, ticker, company, sector, instrument_type, value_usd, portfolio_pct, change_note, source)
+    insert_soros_holding(rank, ticker, company, sector, instrument_type, value_usd, portfolio_pct, change_note, source=strip_markdown_url(source))
     return f"Saved #{rank}: [{instrument_type.upper()}] {ticker} - {company} ({portfolio_pct})"
  
  
@@ -136,7 +145,7 @@ def save_daily_news(
         published_date: publish date as string e.g. '2026-03-19'
     """
     from db import insert_daily_news
-    insert_daily_news(category, title, summary, url, source, published_date)
+    insert_daily_news(category, title, summary, strip_markdown_url(url), source, published_date)
     return f"Saved [{category}]: {title}"
  
  
