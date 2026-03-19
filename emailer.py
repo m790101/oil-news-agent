@@ -292,7 +292,7 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     msg = EmailMessage()
     msg["From"] = gmail_user
     msg["To"] = to
-    msg["Subject"] = subject
+    msg["Subject"] = safe_subject
 
     if html:
         msg.set_content("Please enable HTML to view this email.")
