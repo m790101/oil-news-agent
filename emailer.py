@@ -187,7 +187,7 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         return text.encode("ascii", errors="ignore").decode("ascii")
 
     safe_subject = clean(subject)
-    safe_body = clean(body) if not html else body.replace("\xa0", " ")
+    safe_body = clean(body)
 
     # msg = EmailMessage()
     # msg["From"] = gmail_user
