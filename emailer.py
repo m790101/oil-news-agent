@@ -42,7 +42,7 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         print("[EMAIL] Missing Gmail credentials in .env — skipping.")
         return False
 
-    msg = MIMEMultipart()
+    msg = MIMEMultipart("alternative")
     msg["From"] = gmail_user
     msg["To"] = to
     msg["Subject"] = subject
