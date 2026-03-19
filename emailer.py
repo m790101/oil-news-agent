@@ -295,6 +295,7 @@ def build_daily_news_summary(rows: list[dict]) -> str:
 def generate_news_brief(rows: list[dict]) -> str:
     try:
         from llama_index.llms.openai import OpenAI as LlamaOpenAI
+        import unicodedata
         titles = "\n".join(
             f"- [{r['category'].upper()}] {r['title']}"
             for r in rows if r.get("category") in ("global", "london")
@@ -305,7 +306,11 @@ def generate_news_brief(rows: list[dict]) -> str:
             f"that captures the overall mood and most notable story of the day. "
             f"Keep it conversational, not robotic.\n\n{titles}"
         )
-        return response.text.strip()
+        text = response.text.strip()
+        # Sanitize LLM output
+        text = text.replace("\xa0", " ").replace("\u2019", "'").replace("\u2013", "-").replace("\u2014", "-")
+        text = unicodedata.normalize("NFKD", text).encode("ascii", errors="ignore").decode("ascii")
+        return text
     except Exception as e:
         print(f"[EMAIL] Could not generate brief: {e}")
         return "Here is your daily news digest."
