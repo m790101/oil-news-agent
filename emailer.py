@@ -223,6 +223,10 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         msg["From"] = gmail_user
         msg["To"] = to
         msg["Subject"] = safe_subject
+
+        raw = msg.as_bytes()
+        print(f"[EMAIL] raw bytes around 25: {repr(raw[15:35])}")
+
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user_safe, gmail_password)
             server.sendmail(gmail_user_safe, to_safe, msg.as_bytes())
