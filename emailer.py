@@ -33,11 +33,12 @@ def build_crude_oil_summary(rows: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def send_email(subject: str, body: str) -> bool:
+def send_email(subject: str, body: str, to: str) -> bool:
     """Send a plain text email via Gmail SMTP."""
     gmail_user = os.environ.get("GMAIL_USER")
     gmail_password = os.environ.get("GMAIL_APP_PASSWORD")
-    gmail_to = os.environ.get("GMAIL_TO")
+    # gmail_to = os.environ.get("GMAIL_TO")
+    gmail_to = to 
 
     if not all([gmail_user, gmail_password, gmail_to]):
         print("[EMAIL] Missing Gmail credentials in .env — skipping.")
