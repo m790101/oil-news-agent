@@ -157,9 +157,9 @@ def build_daily_news_html(rows: list[dict]) -> str:
     brief = generate_news_brief(rows)
  
     category_config = {
-        "global": {"label": "🌍 Global News",  "color": "#2c3e50"},
-        "london": {"label": "🇬🇧 London News", "color": "#1a5276"},
-        "art":    {"label": "🎨 Art News",      "color": "#6c3483"},
+        "global": {"label": "Global News",  "color": "#2c3e50"},
+        "london": {"label": "London News", "color": "#1a5276"},
+        "art":    {"label": "Art News", "color": "#6c3483"},
     }
     grouped = {"global": [], "london": [], "art": []}
     for row in rows:
