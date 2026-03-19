@@ -236,7 +236,7 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
 def build_crude_oil_summary(rows: list[dict]) -> str:
     if not rows:
         return "No crude oil news was saved in this run."
-    today = datetime.now().strftime("%Y-%m-%d %H:%M")
+    today = datetime.now().strftime("%Y-%m-%d %H:%M").replace("\xa0", " ")
     lines = [
         f"Crude Oil News Summary - {today}",
         "=" * 50,
@@ -388,7 +388,7 @@ def build_daily_news_html(rows: list[dict]) -> str:
 
 def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] = None):
     from db import get_all_crude_oil, get_soros_portfolio
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now().strftime("%Y-%m-%d %H:%M").replace("\xa0", " ")
     if crude_oil_rows is None:
         all_rows = get_all_crude_oil()
         crude_oil_rows = [r for r in all_rows if r["created_at"].startswith(today)]
@@ -408,7 +408,7 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
 
 def send_daily_news_global(news_rows: list[dict] = None):
     from db import get_daily_news_by_date
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = datetime.now().strftime("%Y-%m-%d").replace("\xa0", " ")
     if news_rows is None:
         news_rows = get_daily_news_by_date(today)
     if not news_rows:
