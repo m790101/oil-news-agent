@@ -53,7 +53,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
-            server.sendmail(gmail_user, to, msg.as_string())
+            server.sendmail(gmail_user, to, msg.as_bytes())
+            # server.sendmail(gmail_user, to, msg.as_string())
         print(f"[EMAIL] Sent to {to}")
         return True
     except Exception as e:
@@ -160,13 +161,6 @@ def build_daily_news_html(rows: list[dict]) -> str:
         "london": {"label": "🇬🇧 London News", "color": "#1a5276"},
         "art":    {"label": "🎨 Art News",      "color": "#6c3483"},
     }
-
-    category_labels = {
-        "global": "🌍 GLOBAL NEWS",
-        "london": "🇬🇧 LONDON NEWS",
-        "art":    "🎨 ART NEWS",
-    }
- 
     grouped = {"global": [], "london": [], "art": []}
     for row in rows:
         cat = row.get("category", "global")
