@@ -176,37 +176,58 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     if not all([gmail_user, gmail_password, to]):
         print("[EMAIL] Missing Gmail credentials in .env — skipping.")
         return False
+    
+    import unicodedata
+    # Sanitize everything
+    def clean(text):
+        text = text.replace("\xa0", " ").replace("\u2019", "'").replace("\u2018", "'")
+        text = text.replace("\u201c", '"').replace("\u201d", '"')
+        text = text.replace("\u2013", "-").replace("\u2014", "-")
+        text = unicodedata.normalize("NFKD", text)
+        return text.encode("ascii", errors="ignore").decode("ascii")
 
-    msg = EmailMessage()
-    msg["From"] = gmail_user
-    msg["To"] = to
-    # Use ascii-safe subject — replace em dash and other common Unicode
-    safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
-    msg["Subject"] = safe_subject
+    safe_subject = clean(subject)
+    safe_body = clean(body) if not html else body.replace("\xa0", " ")
 
-    if html:
-        msg.set_content("Please enable HTML to view this email.")
-        msg.add_alternative(body, subtype="html")
-    else:
-        msg.set_content(body)
+    # msg = EmailMessage()
+    # msg["From"] = gmail_user
+    # msg["To"] = to
+    # # Use ascii-safe subject — replace em dash and other common Unicode
+    # safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
+    # msg["Subject"] = safe_subject
 
-    print(f"[EMAIL] FROM: {repr(gmail_user)}")
-    print(f"[EMAIL] TO: {repr(to)}")
+    # if html:
+    #     msg.set_content("Please enable HTML to view this email.")
+    #     msg.add_alternative(body, subtype="html")
+    # else:
+    #     msg.set_content(body)
+
+    # print(f"[EMAIL] FROM: {repr(gmail_user)}")
+    # print(f"[EMAIL] TO: {repr(to)}")
     print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
-    print(f"[EMAIL] BODY: {repr(body)}")
+    print(f"[EMAIL] BODY: {repr(safe_body)}")
 
     try:
-        # Use sendmail with as_bytes() to avoid send_message's ASCII address encoding
-        raw = msg.as_bytes()
+        from email.mime.text import MIMEText
+        mime_type = "html" if html else "plain"
+        msg = MIMEText(safe_body.encode("utf-8"), mime_type, "utf-8")
+        msg["From"] = gmail_user
+        msg["To"] = to
+        msg["Subject"] = safe_subject
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
-            server.sendmail(
-                gmail_user.encode('ascii', errors='ignore').decode('ascii'),
-                to.encode('ascii', errors='ignore').decode('ascii'),
-                raw
-            )
+            server.sendmail(gmail_user, to, msg.as_bytes())
         print(f"[EMAIL] Sent to {to}")
         return True
+        # with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        #     server.login(gmail_user, gmail_password)
+        #     server.sendmail(
+        #         gmail_user.encode('ascii', errors='ignore').decode('ascii'),
+        #         to.encode('ascii', errors='ignore').decode('ascii'),
+        #         raw
+        #     )
+        # print(f"[EMAIL] Sent to {to}")
+        # return True
     except Exception as e:
         print(f"[EMAIL] Failed to send: {e}")
         return False
