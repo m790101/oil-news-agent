@@ -14,8 +14,8 @@ from db import (
     # update_file_path,
 )
 from agents import build_crude_oil_agent, build_soros_agent, build_daily_news_agent
-# from emailer import send_daily_report, send_daily_news_global
-from emailer import send_daily_report
+from emailer import send_daily_report, send_daily_news_global
+# from emailer import send_daily_report
 
 
 async def run_crude_oil_agent():
@@ -81,7 +81,7 @@ async def main():
     # 2. Run agents 
     await run_crude_oil_agent()
     await run_soros_agent()
-    # await run_daily_news_agent()
+    await run_daily_news_agent()
 
     # 3. Email today's crude oil results
     print("\n" + "=" * 50)
@@ -90,7 +90,7 @@ async def main():
 
     # 4. Email today's news digest
     send_daily_report()
-    # send_daily_news_global()
+    send_daily_news_global()
 
 
     print("\n" + "=" * 50)

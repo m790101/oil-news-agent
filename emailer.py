@@ -97,6 +97,35 @@ def build_soros_summary(rows: list[dict]) -> str:
 
 
 
+ 
+def build_daily_news_summary(rows: list[dict]) -> str:
+    if not rows:
+        return "No daily news found."
+    category_labels = {
+        "global": "GLOBAL NEWS",
+        "london": "LONDON NEWS",
+        "art":    "ART NEWS",
+    }
+    grouped = {"global": [], "london": [], "art": []}
+    for row in rows:
+        cat = row.get("category", "global")
+        if cat in grouped:
+            grouped[cat].append(row)
+    lines = ["Daily News Digest", "=" * 50, ""]
+    for cat, label in category_labels.items():
+        items = grouped.get(cat, [])
+        if not items:
+            continue
+        lines.append(label)
+        lines.append("-" * 40)
+        for i, row in enumerate(items, 1):
+            lines.append(f"{i}. {row['title']}")
+            lines.append(f"   {row['summary']}")
+            lines.append(f"   Source: {row['source']} | {row['published_date']} | {row['url']}")
+            lines.append("")
+    return "\n".join(lines)
+
+
 def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] = None):
     """Send a combined daily report with crude oil news and Soros portfolio."""
     from db import get_all_crude_oil, get_soros_portfolio
@@ -123,3 +152,21 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
  
     send_email(subject, body)
  
+
+
+
+def send_daily_news_global(news_rows: list[dict] = None):
+    from db import get_daily_news_by_date
+    today = datetime.now().strftime("%Y-%m-%d")
+    if news_rows is None:
+        news_rows = get_daily_news_by_date(today)
+    if not news_rows:
+        print("[EMAIL] No news to send to external recipient.")
+        return
+    recipient = os.environ.get("GMAIL_EMILY")
+    if not recipient:
+        print("[EMAIL] GMAIL_EMILY not set in .env — skipping external email.")
+        return
+    subject = f"Daily News Digest - {today}"
+    body = build_daily_news_summary(news_rows)
+    send_email(subject, body, to=recipient)
