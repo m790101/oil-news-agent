@@ -151,7 +151,7 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
         build_soros_summary(soros_rows),
     ]))
  
-    send_email(subject, body)
+    send_email(subject, body, to=os.environ.get("GMAIL_TO"))
  
 
 
