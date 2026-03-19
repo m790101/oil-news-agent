@@ -61,6 +61,7 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           GMAIL_TO: ${{ secrets.GMAIL_TO }}
+          GMAIL_EMILY: ${{ secrets.GMAIL_EMILY }}
         run: python main.py
 
       # Save updated DB and scraped files for next run
