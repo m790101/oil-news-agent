@@ -198,6 +198,10 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
     print(f"[EMAIL] BODY: {repr(safe_body)}")
 
+    for i, c in enumerate(safe_body):
+        if ord(c) > 127:
+            print(f"[EMAIL] Non-ASCII at {i}: {repr(c)} context: {repr(safe_body[max(0,i-20):i+20])}")
+            break
     try:
         from email.mime.text import MIMEText
         mime_type = "html" if html else "plain"
