@@ -45,7 +45,7 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     msg = MIMEMultipart("alternative")
     msg["From"] = gmail_user
     msg["To"] = to
-    msg["Subject"] = subject
+    msg["Subject"] = subject.encode("utf-8").decode("utf-8")
     mime_type = "html" if html else "plain"
     msg.attach(MIMEText(body, mime_type, "utf-8"))
     # msg.attach(MIMEText(body, "plain", "utf-8"))
@@ -53,8 +53,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
-            # server.sendmail(gmail_user, to, msg.as_bytes())
-            server.sendmail(gmail_user, to, msg.as_string())
+            server.sendmail(gmail_user, to, msg.as_bytes())
+            # server.sendmail(gmail_user, to, msg.as_string())
         print(f"[EMAIL] Sent to {to}")
         return True
     except Exception as e:
@@ -256,4 +256,5 @@ def send_daily_news_global(news_rows: list[dict] = None):
  
     subject = f"Daily News Digest: {today}"
     body = build_daily_news_html(news_rows)
+    body = body.replace("\xa0", " ")
     send_email(subject, body, to=recipient, html=True) 
