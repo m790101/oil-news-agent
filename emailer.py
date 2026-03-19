@@ -215,12 +215,17 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         msg = MIMEText(safe_body, mime_type, "utf-8") 
         gmail_user_safe = gmail_user.strip().replace("\xa0", "").encode("ascii", errors="ignore").decode("ascii")
         to_safe = to.strip().replace("\xa0", "").encode("ascii", errors="ignore").decode("ascii")
+
+
+        print(f"[EMAIL] gmail_user_safe bytes: {repr(gmail_user_safe.encode('utf-8'))}")
+        print(f"[EMAIL] to_safe bytes: {repr(to_safe.encode('utf-8'))}")
+
         msg["From"] = gmail_user
         msg["To"] = to
         msg["Subject"] = safe_subject
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user_safe, gmail_password)
-            server.sendmail(gmail_user, to_safe, msg.as_bytes())
+            server.sendmail(gmail_user_safe, to_safe, msg.as_bytes())
         print(f"[EMAIL] Sent to {to}")
         return True
     except Exception as e:
