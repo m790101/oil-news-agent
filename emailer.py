@@ -254,6 +254,6 @@ def send_daily_news_global(news_rows: list[dict] = None):
         print("[EMAIL] GMAIL_EMILY not set in .env — skipping external email.")
         return
  
-    subject = f"Daily News Digest — {today}"
+    subject = f"Daily News Digest: {today}"
     body = build_daily_news_html(news_rows)
     send_email(subject, body, to=recipient, html=True) 
