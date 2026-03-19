@@ -62,6 +62,8 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           GMAIL_TO: ${{ secrets.GMAIL_TO }}
           GMAIL_EMILY: ${{ secrets.GMAIL_EMILY }}
+          LC_ALL: C.UTF-8
+          LANG: C.UTF-8
         run: python main.py
 
       # Save updated DB and scraped files for next run
