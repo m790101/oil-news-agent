@@ -187,7 +187,6 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         return text.encode("ascii", errors="ignore").decode("ascii")
 
     safe_subject = clean(subject)
-    # safe_body = clean(body)
 
     if html:
         safe_body = body.encode("utf-8").decode("utf-8")  # already utf-8, just sanitize \xa0
@@ -202,8 +201,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     else:
         safe_body = clean(body)
 
-    print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
-    print(f"[EMAIL] BODY: {repr(safe_body)}")
+    # print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
+    # print(f"[EMAIL] BODY: {repr(safe_body)}")
 
     for i, c in enumerate(safe_body):
         if ord(c) > 127:
@@ -216,16 +215,12 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         gmail_user_safe = gmail_user.strip().replace("\xa0", "").encode("ascii", errors="ignore").decode("ascii")
         to_safe = to.strip().replace("\xa0", "").encode("ascii", errors="ignore").decode("ascii")
 
-
-        print(f"[EMAIL] gmail_user_safe bytes: {repr(gmail_user_safe.encode('utf-8'))}")
-        print(f"[EMAIL] to_safe bytes: {repr(to_safe.encode('utf-8'))}")
-
         msg["From"] = gmail_user
         msg["To"] = to
         msg["Subject"] = safe_subject
 
-        raw = msg.as_bytes()
-        print(f"[EMAIL] raw bytes around 25: {repr(raw[15:35])}")
+        # raw = msg.as_bytes()
+        # print(f"[EMAIL] raw bytes around 25: {repr(raw[15:35])}")
 
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user_safe, gmail_password)
@@ -415,25 +410,9 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
     send_email(subject, body, to=os.environ.get("GMAIL_TO"))
 
 
-def send_daily_news_global(news_rows: list[dict] = None):
-    from db import get_daily_news_by_date
-    today = datetime.now().strftime("%Y-%m-%d")
-    if news_rows is None:
-        news_rows = get_daily_news_by_date(today)
-    if not news_rows:
-        print("[EMAIL] No news to send to external recipient.")
-        return
-    recipient = os.environ.get("GMAIL_EMILY")
-    if not recipient:
-        print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
-        return
-    subject = f"Daily News Digest - {today}"
-    body = build_daily_news_summary(news_rows)
-    send_email(subject, body, to=recipient)
-
 # def send_daily_news_global(news_rows: list[dict] = None):
 #     from db import get_daily_news_by_date
-#     today = datetime.now().strftime("%Y-%m-%d").replace("\xa0", " ")
+#     today = datetime.now().strftime("%Y-%m-%d")
 #     if news_rows is None:
 #         news_rows = get_daily_news_by_date(today)
 #     if not news_rows:
@@ -444,6 +423,22 @@ def send_daily_news_global(news_rows: list[dict] = None):
 #         print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
 #         return
 #     subject = f"Daily News Digest - {today}"
-#     body = build_daily_news_html(news_rows)
-#     body = body.replace("\xa0", " ") 
-#     send_email(subject, body, to=recipient, html=True)
+#     body = build_daily_news_summary(news_rows)
+#     send_email(subject, body, to=recipient)
+
+def send_daily_news_global(news_rows: list[dict] = None):
+    from db import get_daily_news_by_date
+    today = datetime.now().strftime("%Y-%m-%d").replace("\xa0", " ")
+    if news_rows is None:
+        news_rows = get_daily_news_by_date(today)
+    if not news_rows:
+        print("[EMAIL] No news to send to external recipient.")
+        return
+    recipient = os.environ.get("GMAIL_EMILY")
+    if not recipient:
+        print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
+        return
+    subject = f"Daily News Digest - {today}"
+    body = build_daily_news_html(news_rows)
+    body = body.replace("\xa0", " ") 
+    send_email(subject, body, to=recipient, html=True)
