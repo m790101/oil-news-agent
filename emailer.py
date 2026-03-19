@@ -195,6 +195,10 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         safe_body = safe_body.replace("\u201c", '"').replace("\u201d", '"')
         safe_body = safe_body.replace("\u2013", "-").replace("\u2014", "-")
         safe_body = safe_body.replace("\xa0", " ").replace("\u200b", "")
+
+        import unicodedata
+        safe_body = unicodedata.normalize("NFKD", safe_body).encode("ascii", errors="ignore").decode("ascii")
+
     else:
         safe_body = clean(body)
 
