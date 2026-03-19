@@ -3,6 +3,7 @@ import smtplib
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.header import Header
 from dotenv import load_dotenv
 from db import get_all_crude_oil
 
@@ -45,7 +46,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     msg = MIMEMultipart("alternative")
     msg["From"] = gmail_user
     msg["To"] = to
-    msg["Subject"] = subject.encode("utf-8").decode("utf-8")
+    # msg["Subject"] = subject
+    msg["Subject"] = Header(subject, "utf-8")
     mime_type = "html" if html else "plain"
     msg.attach(MIMEText(body, mime_type, "utf-8"))
     # msg.attach(MIMEText(body, "plain", "utf-8"))
