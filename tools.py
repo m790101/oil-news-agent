@@ -112,3 +112,32 @@ def save_soros_holding(
  
  
 save_soros_tool = FunctionTool.from_defaults(fn=save_soros_holding)
+
+
+
+
+# ── Daily news save tool ────────────────────────────────────────────────────
+ 
+def save_daily_news(
+    category: str,
+    title: str,
+    summary: str,
+    url: str,
+    source: str,
+    published_date: str,
+) -> str:
+    """Save a daily news item to the database.
+    Args:
+        category: one of 'global', 'london', 'art'
+        title: headline of the article
+        summary: 2-3 sentence summary of the content
+        url: full URL of the article
+        source: publication name e.g. 'BBC', 'The Guardian'
+        published_date: publish date as string e.g. '2026-03-19'
+    """
+    from db import insert_daily_news
+    insert_daily_news(category, title, summary, url, source, published_date)
+    return f"Saved [{category}]: {title}"
+ 
+ 
+save_daily_news_tool = FunctionTool.from_defaults(fn=save_daily_news)

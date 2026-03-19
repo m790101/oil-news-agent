@@ -40,6 +40,19 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS daily_news (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            category TEXT,   -- 'global', 'london', 'art'
+            title TEXT,
+            summary TEXT,
+            url TEXT UNIQUE,
+            source TEXT,
+            published_date TEXT,
+            created_at TEXT DEFAULT (datetime('now'))
+        )
+    """)
+
     conn.commit()
     conn.close()
     print("[DB] Tables initialized.")
@@ -231,6 +244,41 @@ def get_soros_portfolio():
     conn = get_connection()
     rows = conn.execute(
         "SELECT * FROM soros_portfolio ORDER BY rank ASC"
+    ).fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+
+
+def insert_daily_news(category: str, title: str, summary: str, url: str, source: str, published_date: str):
+    conn = get_connection()
+    try:
+        conn.execute(
+            """INSERT OR IGNORE INTO daily_news (category, title, summary, url, source, published_date)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (category, title, summary, url, source, published_date),
+        )
+        conn.commit()
+        print(f"[DB] Saved daily news [{category}]: {title[:60]}")
+    except Exception as e:
+        print(f"[DB] Error inserting daily news: {e}")
+    finally:
+        conn.close()
+ 
+ 
+def get_existing_daily_news_urls() -> list[str]:
+    conn = get_connection()
+    rows = conn.execute("SELECT url FROM daily_news").fetchall()
+    conn.close()
+    return [row["url"] for row in rows]
+ 
+ 
+def get_daily_news_by_date(date: str) -> list[dict]:
+    conn = get_connection()
+    rows = conn.execute(
+        "SELECT * FROM daily_news WHERE created_at LIKE ? ORDER BY category, id",
+        (f"{date}%",),
     ).fetchall()
     conn.close()
     return [dict(row) for row in rows]

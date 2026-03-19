@@ -6,14 +6,15 @@ load_dotenv()
 from db import (
     init_db,
     init_soros_table,
-    clear_soros_portfolio
+    clear_soros_portfolio,
+    get_existing_daily_news_urls
     # migrate_add_file_path,
     # get_existing_crude_oil_urls,
     # get_rows_without_file,
     # update_file_path,
 )
-from agents import build_crude_oil_agent, build_soros_agent
-from emailer import send_daily_report
+from agents import build_crude_oil_agent, build_soros_agent, build_daily_news_agent
+from emailer import send_daily_report, send_daily_news_global
 
 
 async def run_crude_oil_agent():
@@ -43,6 +44,24 @@ async def run_soros_agent():
     print(response)
 
 
+async def run_daily_news_agent():
+    print("\n" + "=" * 50)
+    print("  DAILY NEWS AGENT")
+    print("=" * 50)
+    existing_urls = get_existing_daily_news_urls()
+    print(f"[DEDUP] {len(existing_urls)} existing URLs in DB.")
+    agent = build_daily_news_agent()
+    response = await agent.run(
+        user_msg=f"""Find today's news digest: 2 global, 1 London, 2 art stories.
+ 
+IMPORTANT - skip any article whose URL is already in this list:
+{chr(10).join(f"- {u}" for u in existing_urls[-50:]) or "No existing URLs."}
+ 
+Only save NEW articles."""
+    )
+    print("\n[DAILY NEWS SUMMARY]")
+    print(response)
+
 
 
 def format_url_list(urls: list[str]) -> str:
@@ -58,15 +77,19 @@ async def main():
     init_soros_table()
 
 
-    # 2. Run crude oil agent
+    # 2. Run agents 
     await run_crude_oil_agent()
     await run_soros_agent()
+    await run_daily_news_agent()
 
     # 3. Email today's crude oil results
     print("\n" + "=" * 50)
     print("  SENDING EMAIL REPORT")
     print("=" * 50)
+
+    # 4. Email today's news digest
     send_daily_report()
+    send_daily_news_global()
 
 
     print("\n" + "=" * 50)
