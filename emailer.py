@@ -319,7 +319,7 @@ def generate_news_brief(rows: list[dict]) -> str:
 def build_daily_news_html(rows: list[dict]) -> str:
     if not rows:
         return "<p>No daily news found.</p>"
-    today = datetime.now().strftime("%B %d, %Y")
+    today = datetime.now().strftime("%B %d, %Y").replace("\xa0", " ")
     brief = generate_news_brief(rows)
     category_config = {
         "global": {"label": "Global News",  "color": "#2c3e50"},
