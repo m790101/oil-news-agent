@@ -47,8 +47,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     msg = MIMEMultipart()
     msg["From"] = gmail_user
     msg["To"] = to
-    # msg["Subject"] = subject
-    msg["Subject"] = Header(subject, "utf-8")
+    msg["Subject"] = subject
+    # msg["Subject"] = Header(subject, "utf-8")
     # mime_type = "html" if html else "plain"
     # msg.attach(MIMEText(body, mime_type, "utf-8"))
     msg.attach(MIMEText(body, "plain", "utf-8"))
@@ -110,7 +110,7 @@ def build_daily_news_summary(rows: list[dict]) -> str:
     category_labels = {
         "global": "🌍 GLOBAL NEWS",
         "london": "🇬🇧 LONDON NEWS",
-        "art":    "🎨 ART NEWS",
+        "art":"🎨 ART NEWS",
     }
  
     # Group by category
