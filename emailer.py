@@ -159,25 +159,6 @@
  
 
 
-
-def send_daily_news_global(news_rows: list[dict] = None):
-    from db import get_daily_news_by_date
-    today = datetime.now().strftime("%Y-%m-%d")
-    if news_rows is None:
-        news_rows = get_daily_news_by_date(today)
-    if not news_rows:
-        print("[EMAIL] No news to send to external recipient.")
-        return
-    recipient = os.environ.get("GMAIL_EMILY")
-    if not recipient:
-        print("[EMAIL] GMAIL_EMILY not set in .env — skipping external email.")
-        return
-    subject = f"Daily News Digest - {today}"
-    body = build_daily_news_summary(news_rows)
-    send_email(subject, body, to=recipient)
-
-
-
 import os
 import smtplib
 from datetime import datetime
@@ -200,13 +181,8 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     msg["From"] = gmail_user
     msg["To"] = to
     # Use ascii-safe subject — replace em dash and other common Unicode
-    # safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
-    msg["Subject"] = subject
-
-    print(f"[EMAIL] FROM: {repr(gmail_user)}")
-    print(f"[EMAIL] TO: {repr(to)}")
-    print(f"[EMAIL] SUBJECT: {repr(subject)}")
-    # print(f"[EMAIL] msg: {repr(msg)}")
+    safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
+    msg["Subject"] = safe_subject
 
     if html:
         msg.set_content("Please enable HTML to view this email.")
@@ -214,10 +190,21 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
     else:
         msg.set_content(body)
 
+    print(f"[EMAIL] FROM: {repr(gmail_user)}")
+    print(f"[EMAIL] TO: {repr(to)}")
+    print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
+    print(f"[EMAIL] BODY: {repr(body)}")
+
     try:
+        # Use sendmail with as_bytes() to avoid send_message's ASCII address encoding
+        raw = msg.as_bytes()
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
-            server.send_message(msg)
+            server.sendmail(
+                gmail_user.encode('ascii', errors='ignore').decode('ascii'),
+                to.encode('ascii', errors='ignore').decode('ascii'),
+                raw
+            )
         print(f"[EMAIL] Sent to {to}")
         return True
     except Exception as e:
