@@ -187,30 +187,21 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         return text.encode("ascii", errors="ignore").decode("ascii")
 
     safe_subject = clean(subject)
-    safe_body = clean(body)
+    # safe_body = clean(body)
 
-    # msg = EmailMessage()
-    # msg["From"] = gmail_user
-    # msg["To"] = to
-    # # Use ascii-safe subject — replace em dash and other common Unicode
-    # safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
-    # msg["Subject"] = safe_subject
+    if html:
+        safe_body = body.encode("utf-8").decode("utf-8")  # already utf-8, just sanitize \xa0
+        safe_body = safe_body.replace("\xa0", " ").replace("\u200b", "")
+    else:
+        safe_body = clean(body)
 
-    # if html:
-    #     msg.set_content("Please enable HTML to view this email.")
-    #     msg.add_alternative(body, subtype="html")
-    # else:
-    #     msg.set_content(body)
-
-    # print(f"[EMAIL] FROM: {repr(gmail_user)}")
-    # print(f"[EMAIL] TO: {repr(to)}")
     print(f"[EMAIL] SUBJECT: {repr(safe_subject)}")
     print(f"[EMAIL] BODY: {repr(safe_body)}")
 
     try:
         from email.mime.text import MIMEText
         mime_type = "html" if html else "plain"
-        msg = MIMEText(safe_body.encode("utf-8"), mime_type, "utf-8")
+        msg = MIMEText(safe_body, mime_type, "utf-8") 
         msg["From"] = gmail_user
         msg["To"] = to
         msg["Subject"] = safe_subject
@@ -219,15 +210,6 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
             server.sendmail(gmail_user, to, msg.as_bytes())
         print(f"[EMAIL] Sent to {to}")
         return True
-        # with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        #     server.login(gmail_user, gmail_password)
-        #     server.sendmail(
-        #         gmail_user.encode('ascii', errors='ignore').decode('ascii'),
-        #         to.encode('ascii', errors='ignore').decode('ascii'),
-        #         raw
-        #     )
-        # print(f"[EMAIL] Sent to {to}")
-        # return True
     except Exception as e:
         print(f"[EMAIL] Failed to send: {e}")
         return False
