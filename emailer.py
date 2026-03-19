@@ -263,20 +263,17 @@
 #     body = body.replace("\xa0", " ")
 #     send_email("Daily News Digest", body, to=recipient, html=True) 
 
-
-
 import os
 import smtplib
 from datetime import datetime
 from email.message import EmailMessage
 from dotenv import load_dotenv
-from db import get_all_crude_oil
 
 load_dotenv()
 
 
 def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
-    """Send an email via Gmail SMTP. Handles Unicode, emoji, special chars."""
+    """Send an email via Gmail SMTP. Handles Unicode subjects and bodies."""
     gmail_user = os.environ.get("GMAIL_USER")
     gmail_password = os.environ.get("GMAIL_APP_PASSWORD")
 
@@ -284,14 +281,11 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         print("[EMAIL] Missing Gmail credentials in .env — skipping.")
         return False
 
-    # Clean any non-breaking spaces or weird unicode whitespace from body
-    body = body.replace("\xa0", " ")
-
-    safe_subject = subject.encode("ascii", errors="ignore").decode("ascii")
-
     msg = EmailMessage()
     msg["From"] = gmail_user
     msg["To"] = to
+    # Use ascii-safe subject — replace em dash and other common Unicode
+    safe_subject = subject.replace("—", "-").replace("\u00a0", " ").encode("ascii", errors="ignore").decode("ascii")
     msg["Subject"] = safe_subject
 
     if html:
@@ -301,10 +295,6 @@ def send_email(subject: str, body: str, to: str, html: bool = False) -> bool:
         msg.set_content(body)
 
     try:
-        # Debug: log if any non-ASCII found
-        for i, c in enumerate(safe_subject):
-            if ord(c) > 127:
-                print(f"[EMAIL] Non-ASCII in subject at {i}: {repr(c)}")
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(gmail_user, gmail_password)
             server.send_message(msg)
@@ -353,9 +343,9 @@ def build_soros_summary(rows: list[dict]) -> str:
     ]
     for row in rows:
         itype = (row.get("instrument_type") or "stock").lower()
-        label = type_labels.get(itype, itype.upper()[:8])
+        label = type_labels.get(itype, itype.upper())
         lines.append(
-            f"#{row['rank']:<3} {label:<10}  {row['ticker']:<8} {row['company']:<32} "
+            f"#{row['rank']:<3} {label:<10} {row['ticker']:<8} {row['company']:<32} "
             f"{row['value_usd']:>8}  {row['portfolio_pct']:>6}  {row['change_note']}"
         )
     lines.append("-" * 70)
@@ -405,7 +395,7 @@ def generate_news_brief(rows: list[dict]) -> str:
             f"that captures the overall mood and most notable story of the day. "
             f"Keep it conversational, not robotic.\n\n{titles}"
         )
-        return response.text.strip().replace("\xa0", " ")
+        return response.text.strip()
     except Exception as e:
         print(f"[EMAIL] Could not generate brief: {e}")
         return "Here is your daily news digest."
@@ -456,9 +446,11 @@ def build_daily_news_html(rows: list[dict]) -> str:
         'box-shadow:0 2px 8px rgba(0,0,0,0.08);overflow:hidden;">'
         '<div style="background:#1a1a2e;padding:24px 28px;">'
         '<div style="color:white;font-size:22px;font-weight:700;">Daily News Digest</div>'
-        f'<div style="color:#aaa;font-size:13px;margin-top:4px;">{today}</div></div>'
+        f'<div style="color:#aaa;font-size:13px;margin-top:4px;">{today}</div>'
+        '</div>'
         '<div style="background:#eef2f7;padding:18px 28px;border-bottom:1px solid #dde3ec;">'
-        f'<div style="font-size:14px;color:#2c3e50;line-height:1.7;font-style:italic;">{brief}</div></div>'
+        f'<div style="font-size:14px;color:#2c3e50;line-height:1.7;font-style:italic;">{brief}</div>'
+        '</div>'
         f'<div style="padding:24px 28px;">{sections_html}</div>'
         '<div style="background:#f8f8f8;border-top:1px solid #eee;padding:14px 28px;'
         'font-size:11px;color:#aaa;text-align:center;">Sent by your Daily News Agent</div>'
@@ -495,7 +487,7 @@ def send_daily_news_global(news_rows: list[dict] = None):
         return
     recipient = os.environ.get("GMAIL_EMILY")
     if not recipient:
-        print("[EMAIL] GMAIL_EMILY not set in .env — skipping external email.")
+        print("[EMAIL] GMAIL_EMILY not set in .env - skipping external email.")
         return
     subject = f"Daily News Digest - {today}"
     body = build_daily_news_html(news_rows)
