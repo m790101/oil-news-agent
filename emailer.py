@@ -381,6 +381,7 @@ def send_daily_report(crude_oil_rows: list[dict] = None, soros_rows: list[dict] 
         build_crude_oil_summary(crude_oil_rows),
         build_soros_summary(soros_rows),
     ]))
+    body = body.replace("\xa0", " ").encode("ascii", errors="ignore").decode("ascii")
     send_email(subject, body, to=os.environ.get("GMAIL_TO"))
 
 
@@ -398,4 +399,5 @@ def send_daily_news_global(news_rows: list[dict] = None):
         return
     subject = f"Daily News Digest - {today}"
     body = build_daily_news_html(news_rows)
+    body = body.replace("\xa0", " ") 
     send_email(subject, body, to=recipient, html=True)
